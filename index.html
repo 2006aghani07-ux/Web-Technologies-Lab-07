@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="weatherApp">
+<head>
+  <meta charset="UTF-8">
+  <title>Weather Dashboard</title>
+
+  <!-- AngularJS CDN -->
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #f4f4f4;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    button {
+      padding: 10px;
+      background: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      background: white;
+      margin: 10px 0;
+      padding: 15px;
+      border-radius: 8px;
+    }
+
+    .error {
+      color: red;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body ng-controller="WeatherController">
+
+<h1>Weather Dashboard</h1>
+
+<button ng-click="refreshWeather()">Refresh Weather</button>
+
+<p class="error" ng-if="error">{{error}}</p>
+
+<ul>
+  <li ng-repeat="city in weatherData">
+    <strong>{{city.name}}</strong><br>
+    Temperature: {{city.temperature}} °C<br>
+    Condition: {{city.condition}}
+  </li>
+</ul>
+
+<script>
+/* ==============================
+   TypeScript Style (Converted)
+============================== */
+
+// Interface-like structure (TS concept)
+class CityWeather {
+  constructor(name, temperature, condition) {
+    this.name = name;
+    this.temperature = temperature;
+    this.condition = condition;
+  }
+}
+
+/* ==============================
+   AngularJS App
+============================== */
+
+var app = angular.module('weatherApp', []);
+
+app.controller('WeatherController', function($scope, $http) {
+
+  $scope.weatherData = [];
+  $scope.error = "";
+
+  // Cities (you can change coordinates)
+  const cities = [
+    { name: "Tokyo", lat: 35, lon: 139 },
+    { name: "London", lat: 51.5, lon: -0.12 },
+    { name: "New York", lat: 40.7, lon: -74 }
+  ];
+
+  // Convert weather code to condition
+  function getCondition(code) {
+    if (code === 0) return "Sunny";
+    if (code <= 3) return "Cloudy";
+    if (code <= 67) return "Rainy";
+    return "Unknown";
+  }
+
+  // Fetch Data (JavaScript Fetch used inside Angular)
+  $scope.refreshWeather = function() {
+
+    $scope.weatherData = [];
+    $scope.error = "";
+
+    cities.forEach(city => {
+
+      fetch(`https://api.open-meteo.com/v1/forecast?latitude=${city.lat}&longitude=${city.lon}&current_weather=true`)
+        .then(response => response.json())
+        .then(data => {
+
+          let weather = new CityWeather(
+            city.name,
+            data.current_weather.temperature,
+            getCondition(data.current_weather.weathercode)
+          );
+
+          $scope.$apply(() => {
+            $scope.weatherData.push(weather);
+          });
+
+        })
+        .catch(error => {
+          $scope.$apply(() => {
+            $scope.error = "Unable to load weather data";
+          });
+        });
+
+    });
+  };
+
+  // Load data on start
+  $scope.refreshWeather();
+
+});
+</script>
+
+</body>
+</html>
